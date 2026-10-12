@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Generate a print-ready, vector QR code PDF at an exact physical size.
+"""Generate a QR code as a print-ready vector PDF or a crisp PNG for digital sharing.
 
     pip install segno
-    python make_qr_pdf.py --url https://go.example.com/q/k7Xp2 --size-mm 30 --out card.pdf
+    python make_qr.py --url https://go.example.com/q/k7Xp2 --size-mm 30 --out card.pdf
+    python make_qr.py --url https://go.example.com/q/k7Xp2 --px 1024 --out share.png
 
---size-mm is the TOTAL size including the quiet zone. Output is a single-page PDF
-sized exactly to the code, so printers get 1:1 scale.
+The format follows the --out extension.
+PDF: --size-mm is the TOTAL size including the quiet zone; the page is sized exactly
+to the code, so printers get 1:1 scale.
+PNG: --px is the target width; the scale is a whole number of pixels per module so
+edges stay sharp (the real width is printed). Use PNG for chat, email, and slides,
+and PDF for anything that goes to a printer.
 """
 import argparse
 import sys
@@ -34,8 +39,9 @@ def contrast(a: str, b: str) -> float:
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--url", required=True, help="Short redirect URL to encode (https)")
-    p.add_argument("--out", required=True, help="Output .pdf path")
+    p.add_argument("--out", required=True, help="Output path ending in .pdf or .png")
     p.add_argument("--size-mm", type=float, default=25, help="Total size in mm incl. quiet zone (default 25)")
+    p.add_argument("--px", type=int, default=1024, help="PNG target width in pixels (default 1024)")
     p.add_argument("--ec", choices=["m", "q", "h"], default="m", help="Error correction (default m; use h only with a logo)")
     p.add_argument("--dark", default="#000000", help="Module color (default black)")
     p.add_argument("--light", default="#ffffff", help="Background color (default white)")
@@ -49,8 +55,20 @@ def main() -> int:
     if contrast(a.dark, a.light) < 4:
         p.error(f"contrast {contrast(a.dark, a.light):.1f}:1 is too low; need at least 4:1")
 
+    ext = a.out.lower().rsplit(".", 1)[-1]
+    if ext not in ("pdf", "png"):
+        p.error("--out must end in .pdf or .png")
+
     qr = segno.make(a.url, error=a.ec, micro=False, boost_error=False)
     total_modules = qr.symbol_size(border=QUIET_ZONE)[0]
+
+    if ext == "png":
+        scale = max(1, a.px // total_modules)
+        qr.save(a.out, kind="png", scale=scale, border=QUIET_ZONE, dark=a.dark, light=a.light)
+        print(f"wrote {a.out}: {scale * total_modules}px wide, version {qr.version}, EC {qr.error}, "
+              f"{total_modules} modules incl. quiet zone, {scale}px/module")
+        return 0
+
     scale = a.size_mm * MM_TO_PT / total_modules  # points per module
     module_mm = a.size_mm / total_modules
     qr.save(a.out, kind="pdf", scale=scale, border=QUIET_ZONE, dark=a.dark, light=a.light)

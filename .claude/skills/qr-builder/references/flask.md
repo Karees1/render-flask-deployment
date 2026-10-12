@@ -81,7 +81,7 @@ with app.app_context():
     print(create_link("https://app.example.com/welcome", "Acme", "spring-brochure"))  # -> k7Xp2q
 ```
 ```bash
-python .claude/skills/qr-builder/scripts/make_qr_pdf.py --url https://go.example.com/q/k7Xp2q --out acme.pdf
+python .claude/skills/qr-builder/scripts/make_qr.py --url https://go.example.com/q/k7Xp2q --out acme.pdf
 ```
 
 ## Render notes

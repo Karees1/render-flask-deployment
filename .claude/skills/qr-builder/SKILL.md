@@ -33,16 +33,17 @@ A short URL also makes a *simpler QR* (fewer modules), which scans more reliably
    | Express / Node | `references/express.md` |
    | Next.js (App Router) | `references/nextjs.md` |
    | React SPA (Vite/CRA) | `references/react.md` |
+   | Static site on Netlify (no backend) | `references/netlify-static.md` |
    | Any other / design questions | `references/redirect-design.md` |
 3. **Add the redirect route** if the project doesn't have one yet (`/q/<slug>`, HTTP 302, DB lookup, scan logging).
 4. **Create the link record** (slug + destination + client + active flag).
 5. **Generate the PDF**:
    ```bash
    pip install segno
-   python .claude/skills/qr-builder/scripts/make_qr_pdf.py \
+   python .claude/skills/qr-builder/scripts/make_qr.py \
      --url https://go.example.com/q/k7Xp2 --size-mm 30 --out client-card.pdf
    ```
-   Output is a vector PDF at exact physical size with the quiet zone included. Print shops can scale it without pixelation.
+   Output is a vector PDF at exact physical size with the quiet zone included (print shops can scale it without pixelation). For WhatsApp, email, and slides use a PNG: `--px 1024 --out share.png`. Never send a PNG to a printer.
 6. **Verify** before handing over: `curl -I <short url>` must return 302 with the right `Location`, and scan the PDF with a phone, on screen and (ideally) as a test print at final size.
 
 ## Non-negotiables
