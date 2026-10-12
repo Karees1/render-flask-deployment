@@ -39,11 +39,11 @@ A short URL also makes a *simpler QR* (fewer modules), which scans more reliably
 4. **Create the link record** (slug + destination + client + active flag).
 5. **Generate the PDF**:
    ```bash
-   pip install segno
+   pip install segno reportlab
    python .claude/skills/qr-builder/scripts/make_qr.py \
      --url https://go.example.com/q/k7Xp2 --size-mm 30 --out client-card.pdf
    ```
-   Output is a vector PDF at exact physical size with the quiet zone included (print shops can scale it without pixelation). For WhatsApp, email, and slides use a PNG: `--px 1024 --out share.png`. Never send a PNG to a printer.
+   Output is a vector PDF at exact physical size with the quiet zone included, in **CMYK: squares are 100% K single-ink black on knock-out white** (not RGB, which shops may convert to four-ink rich black and blur small squares). For WhatsApp, email, and slides use a PNG: `--px 1024 --out share.png`. Never send a PNG to a printer.
 6. **Verify** before handing over: `curl -I <short url>` must return 302 with the right `Location`, and scan the PDF with a phone, on screen and (ideally) as a test print at final size.
 
 ## Non-negotiables
@@ -55,6 +55,7 @@ A short URL also makes a *simpler QR* (fewer modules), which scans more reliably
 - **Error correction M or Q** for print (not L). Not H unless a logo overlays the code, since H makes the code denser.
 - **Quiet zone of at least 4 modules.** The script enforces this.
 - **Dark modules on a light background.** Never invert; many scanners fail.
+- **Press PDFs use 100% K black (CMYK), never RGB or rich black.** The script does this by default; hex colours apply to PNG only.
 - Never ship a code without scanning the final file.
 
 ## Handling client requests
